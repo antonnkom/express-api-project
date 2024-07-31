@@ -23,7 +23,7 @@ node --loader ts-node/esm comments-api.ts
 
 1. ***GET http://localhost:3000/api/comments*** - получение списка всех комментариев
 2. ***GET http://localhost:3000/api/comments/id*** - получение комментария с заданым *id*
-3. ***POST http//localhost:3000/api/comments*** - добавление нового комментария
+3. ***POST http://localhost:3000/api/comments*** - добавление нового комментария
 
 Пример тела POST запроса:
 
