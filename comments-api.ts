@@ -31,8 +31,13 @@ const validateComment = (comment: CommentCreatePayload): CommentValidator => {
     return null;
 };
 
-const saveComments = async (data: IComment[]): Promise<void> => {
-    await writeFile('mock-comments.json', JSON.stringify(data));
+const saveComments = async (data: IComment[]): Promise<boolean> => {
+    try {
+        await writeFile('mock-comments.json', JSON.stringify(data));
+        return true;
+    } catch(e) {
+        return false;
+    }
 };
 
 const compareValues = (target: string, compare: string) => {
@@ -98,10 +103,72 @@ app.post(PATH, async (req: Request<{}, {}, CommentCreatePayload>, res: Response)
 
     const id = uuidv4();
     comments.push({ ...req.body, id });
-    await saveComments(comments);
+    const save = await saveComments(comments);
+
+    if (!save) {
+        res.status(500);
+        res.send('Server error. Comment has not been created');
+        return;
+    }
 
     res.status(201);
     res.send(`Comment id:${id} has been added!`);
+});
+
+app.patch(PATH, async (req: Request<{}, {}, Partial<IComment>>, res: Response) => {
+    const comments = await loadComments();
+    const commentByIndex = comments.findIndex(({ id }) => req.body.id === id);
+
+    if (commentByIndex > -1) {
+        comments[commentByIndex] = { ...comments[commentByIndex], ...req.body };
+        await saveComments(comments);
+
+        res.status(200);
+        res.send(comments[commentByIndex]);
+        return;
+    }
+
+    const newComment = req.body as CommentCreatePayload;
+    const validationResult = validateComment(newComment);
+
+    if (validationResult) {
+        res.status(400);
+        res.send(validationResult);
+        return;
+    }
+
+    const id = uuidv4();
+    const commentToCreate = { ...newComment, id };
+    comments.push(commentToCreate);
+    await saveComments(comments);
+    
+    res.status(201);
+    res.send(commentToCreate);
+});
+
+app.delete(`${PATH}/:id`, async (req: Request<{id: string}>, res: Response) => {
+    const comments = await loadComments();
+    const id = req.params.id;
+
+    let removedComment: IComment | null = null;
+
+    const filteredComments = comments.filter((comment) => {
+        if (id === comment.id.toString()) {
+            removedComment = comment;
+            return false;
+        }
+        return true;
+    });
+
+    if (removedComment) {
+        await saveComments(filteredComments);
+        res.status(200);
+        res.send(removedComment);
+        return;
+    }
+
+    res.status(404);
+    res.send(`Comment with id ${id} is not found`);
 });
 
 app.listen(PORT, () => {
