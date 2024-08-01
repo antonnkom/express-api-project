@@ -19,7 +19,7 @@ node --loader ts-node/esm comments-api.ts
 
 ## Тестирование запросов
 
-Для запуска POST и GET запросов использовалась программа [Postman](https://www.postman.com/downloads/)
+Для тестирования запросов использовалась программа [Postman](https://www.postman.com/downloads/)
 
 1. ***GET http://localhost:3000/api/comments*** - получение списка всех комментариев
 2. ***GET http://localhost:3000/api/comments/id*** - получение комментария с заданым *id*
